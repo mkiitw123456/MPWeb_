@@ -1,0 +1,2 @@
+import {bridge,csrf,headers} from '../lib/registration.js';
+export default async function handler(req,res){headers(res);if(req.method!=='GET')return res.status(405).json({error:'Method not allowed'});try{const result=await bridge('/health');if(result.status!==200||!result.data.ok)throw Error();const token=csrf();res.setHeader('Set-Cookie','__Host-registration='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800');res.json({csrf:token,available:true})}catch{res.status(503).json({available:false,error:'註冊服務暫停，請稍後再試'})}}

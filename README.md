@@ -1,25 +1,21 @@
 # MPWeb 玩家註冊網站
 
-獨立的 React / Vite 網站，供 Vercel Git 部署。
+React / Vite 前端與 Vercel Functions。正式網址 https://mp-web-9q62.vercel.app/ 。
 
-## 目前狀態
+## 架構
 
-目前是「註冊尚未開放」預覽：欄位與送出停用，不建立帳號，也不連接本機或 Hamachi。這不是已完成公開註冊的網站。
+瀏覽器 → 同來源 Vercel API → HTTPS 測試通道 → 本機 127.0.0.1:8789 專用註冊服務 → 遊戲資料庫。
 
-## Vercel
+Vercel Production 環境需設定 REGISTRATION_BRIDGE_URL 與 REGISTRATION_BRIDGE_TOKEN，兩者都不得加 VITE_ 前綴。只有 Production 配置連接，Preview 缺少設定時會顯示服務暫停。
 
-匯入此儲存庫，Root Directory 使用根目錄（留空或 `.`），Framework 選 Vite。建置命令 `npm run build`，輸出目錄 `dist`，使用 Node.js 22 或更新的相容版本。部署後可先使用 Vercel 自帶網址。
+註冊入口驗證來源、簽名 CSRF 和 HttpOnly Cookie；本機服務驗證密鑰並限制每個來源 10 分鐘 5 次、全體 10 分鐘 30 次、同時 2 筆。只轉送帳號、密碼與 UUID；不轉送玩家提供的權限或其他欄位。密碼由本機 bcrypt 處理。UUID 讓相同提交可重試。服務離線時停用表單，頁面開啟超過 30 分鐘需重新整理。
 
-## 本機
+## 部署
 
-```sh
-npm ci
-npm run build
-npm run preview
-```
+Git main 自動部署。Root Directory 為根目錄，Vite，npm run build，dist。npm test 執行 API 測試。變更環境變數後需重新部署。
 
-## 接通註冊前
+## 測試通道限制
 
-另建立受驗證的 HTTPS 註冊 API 與本機遊戲資料庫之間的連接、來源檢查及限流，再啟用表單。Vercel 無法自動加入 Hamachi。電腦離線時應暫停註冊。不得把管理後台或 MySQL 直接公開。
+目前使用 Cloudflare Quick Tunnel；電腦、註冊服務或通道離線就無法註冊，通道重啟會改網址。本機 ops/Start-RegistrationBridge.ps1 啟動服務，ops/Sync-RegistrationBridge.ps1 驗證並同步新的 Vercel Production 參數，之後需部署套用。此版本沒有信箱驗證、自助找回密碼或 CAPTCHA；正式營運前應改成穩定主機與完整防濫用設計。
 
-此儲存庫不包含遊戲客戶端、WZ、管理後台、資料庫設定或密鑰。任何伺服端密鑰都不得使用 VITE_ 前綴或提交到 Git。
+此儲存庫沒有遊戲資料、管理 API、資料庫憑證或通知密鑰。
